@@ -4,7 +4,8 @@ const mongoose = require('mongoose')
 const userSchema = new mongoose.Schema({
   nickname : { type: String },
   profileImage : {type : String},
-  email : {type : String}
+  email : {type : String},
+  password : {type : String}
 },
 {
   timestamps: true

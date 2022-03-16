@@ -1,7 +1,7 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const app = express()
-const port = 3000
+const port = 80
 const photostudio = require('./models/photostudio')
 const user = require('./models/user')
 const photobooth = require('./models/photobooth')
@@ -9,21 +9,26 @@ const review = require('./models/review')
 const areaLarge = require('./models/areaLarge')
 const areaMedium = require('./models/areaMedium')
 const areaSmall = require('./models/areaSmall')
-const ObjectId = mongoose.Types.ObjectId;
+const reviewReport = require('./models/reviewReport')
+const ObjectId = mongoose.Types.ObjectId
 
 app.use(express.json())
 app.use(express.urlencoded({
   extended: true
 }))
 
-mongoose.connect('mongodb://localhost:27017/todaysrecord', function (err) {
+mongoose.connect('mongodb://**id**:**pwd**@localhost:27017/todaysrecord', function (err) {
   if (err) {
     console.error('mongodb connection error', err)
   }
-  console.log('mongodb connected')
+  else console.log('mongodb connected')
 })
 
-// Creat (POST)  
+app.get('/', (req, res) => {
+    res.send('Hello World')
+})
+
+// Creat (POST)
 app.post('/postReview', (req, res) => {
   const newReview = new review({
     psId: req.body.psId,
@@ -47,10 +52,28 @@ app.post('/postUser', (req, res) => {
   const newUser = new user({
     profileImage : req.body.profileImage,
     nickname : req.body.nickname,
-    email : req.body.email
+    email : req.body.email,
+    password : req.body.pwd
   })
 
   newUser.save()
+  .then((result) => {
+    res.json(result)
+  })
+  .catch((error) => {
+    res.json(error)
+    console.log(error)
+  })
+})
+
+app.post('/postReviewReport', (req, res) => {
+  const newReviewReport = new reviewReport({
+    reviewId : req.body.reviewId,
+    accuser : req.body.accuser,
+    reportType : req.body.reportType
+  })
+
+  newReviewReport.save()
   .then((result) => {
     res.json(result)
   })
@@ -98,6 +121,7 @@ app.get('/getAreaSmallByBelong', (req, res) => {
   })
 })
 
+// 기본순
 app.get('/getPhotoStudioByAreaAndType', (req, res) => {
   photostudio.aggregate()
   .addFields({ isInside: { $in: [req.query.area, "$area"]}})
@@ -105,6 +129,56 @@ app.get('/getPhotoStudioByAreaAndType', (req, res) => {
   .project({
     isInside : 0
   })
+  .then((result) => {
+    res.json(result)
+  })
+  .catch((error) => {
+    res.json(error)
+    console.log(error)
+  })
+})
+
+// 가격순
+app.get('/getPsListOfUserAreaInCostOrder', (req, res) => {
+  photostudio.aggregate()
+  .addFields({ isInside: { $in: [req.query.area, "$area"]}})
+  .match({ type: req.query.type, isInside : true })
+  .project({
+    isInside : 0
+  })
+  .sort({cost : 1}) // 오름차순
+  .then((result) => {
+    res.json(result)
+  })
+  .catch((error) => {
+    res.json(error)
+    console.log(error)
+  })
+})
+
+// 인기순
+app.get('/getPsListOfUserAreaInPopularityOrder', (req, res) => {
+  photostudio.aggregate()
+  .addFields({ isInside: { $in: [req.query.area, "$area"]},
+               interestedNum : { $size: "$interested"}})
+  .match({ type: req.query.type, isInside : true })
+  .sort({interestedNum : -1}) // 내림차순
+  .project({
+    isInside : 0,
+    interestedNum : 0
+  })
+  .then((result) => {
+    res.json(result)
+  })
+  .catch((error) => {
+    res.json(error)
+    console.log(error)
+  })
+})
+
+app.get('/getPSListBySearchWord', (req, res) => {
+  photostudio.aggregate()
+  .match({ name : { $regex : req.query.searchWord }})
   .then((result) => {
     res.json(result)
   })
@@ -236,9 +310,21 @@ app.get('/checkIfEmailAlreadySingedUp', (req, res) => {
   user.aggregate()
   .match({email : req.query.email})
   .then((result) => {
-    res.json(result) // Array[User]
+    res.json(result[0])
   })
   .catch((error) => {
+    res.json(error)
+    console.log(error)
+  })
+})
+
+app.get('/emailLogin', (req, res)=>{
+  user.aggregate()
+  .match({email : req.query.id, password : req.query.pwd})
+  .then((result) => {
+    res.json(result[0])
+  })
+  .catch((error)=>{
     res.json(error)
     console.log(error)
   })
@@ -270,11 +356,12 @@ app.put('/putReviewById', (req, res) => {
 })
 
 // 부분을 수정하는 PATCH
-app.patch('/patchUserNicknameById', (req, res) => {
+app.patch('/patchUserById', (req, res) => {
   user
   .findOneAndUpdate(
     { _id: req.query._id },
-    { $set: { nickname: req.query.nickname } },
+    { $set: { nickname: req.query.nickname,
+            profileImage : req.query.profileImg} },
     { returnOriginal: false }
   )
   .then((result) => {
@@ -350,5 +437,5 @@ app.delete('/deleteReviewById', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+  console.log(`Example app listening at http://13.209.25.227:${port}`)
 })

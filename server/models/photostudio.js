@@ -6,7 +6,7 @@ const photostudioSchema = new mongoose.Schema({
   type : {type : String},
   name: { type: String },
   address: { type: String },
-  cost: { type: String },
+  cost: { type: Number },
   image: { type: Array },
   phoneNumber: { type: String },
   siteAddress: { type: String },
