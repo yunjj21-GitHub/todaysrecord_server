@@ -1,7 +1,10 @@
 const express = require('express')
+const fileUpload = require('express-fileupload')
 const mongoose = require('mongoose')
 const app = express()
 const port = 80
+
+const ObjectId = mongoose.Types.ObjectId
 const photostudio = require('./models/photostudio')
 const user = require('./models/user')
 const photobooth = require('./models/photobooth')
@@ -10,13 +13,19 @@ const areaLarge = require('./models/areaLarge')
 const areaMedium = require('./models/areaMedium')
 const areaSmall = require('./models/areaSmall')
 const reviewReport = require('./models/reviewReport')
-const ObjectId = mongoose.Types.ObjectId
 
+// 미들웨어 추가
 app.use(express.json())
 app.use(express.urlencoded({
   extended: true
 }))
+app.use(fileUpload({ // 파일 업로드 허용
+  createParentPath : true
+}))
+// 업로드한 리뷰 이미지 어디서든 접근 허용
+app.use(express.static('reviewImages'))
 
+// 몽고 DB 연결
 mongoose.connect('mongodb://**id**:**pwd**@localhost:27017/todaysrecord', function (err) {
   if (err) {
     console.error('mongodb connection error', err)
@@ -24,8 +33,13 @@ mongoose.connect('mongodb://**id**:**pwd**@localhost:27017/todaysrecord', functi
   else console.log('mongodb connected')
 })
 
-app.get('/', (req, res) => {
-    res.send('Hello World')
+// 이미지 리뷰 업로드 (단일 파일 업로드)
+app.post('/reviewImageUpload', (req, res)=>{
+  let reviewImage = req.files.file // 요청한 객체를 변수에 담는다.
+  reviewImage.mv('./reviewImages/' + reviewImage.name) // 파일을 reviewImages 폴더에 이동시킨다.
+
+  // 업로드 되었다는 응답값을 반환
+  res.send(reviewImage.name)
 })
 
 // Creat (POST)
