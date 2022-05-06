@@ -4,7 +4,6 @@ const photoboothSchema = new mongoose.Schema({
     brand : {type : String},
     name : {type : String},
     address : {type : String},
-    image : {type : String},
     location : {type : Array}
   },
   {
