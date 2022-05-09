@@ -22,8 +22,9 @@ app.use(express.urlencoded({
 app.use(fileUpload({ // 파일 업로드 허용
   createParentPath : true
 }))
-// 업로드한 리뷰 이미지 어디서든 접근 허용
-app.use(express.static('reviewImages'))
+// 업로드한 이미지 어디서든 접근 허용
+app.use(express.static('reviewImages')) // 리뷰 이미지
+app.use(express.static('profileImages')) // 프로필 이미지
 
 // 몽고 DB 연결
 mongoose.connect('mongodb://localhost:27017/todaysrecord', function (err) {
@@ -33,13 +34,22 @@ mongoose.connect('mongodb://localhost:27017/todaysrecord', function (err) {
   else console.log('mongodb connected')
 })
 
-// 이미지 리뷰 업로드 (단일 파일 업로드)
+// 리뷰 이미지 업로드 (단일 파일 업로드)
 app.post('/reviewImageUpload', (req, res)=>{
   let newReviewImage = req.files.reviewImage // 요청한 객체를 변수에 담는다.
   newReviewImage.mv('./reviewImages/' + newReviewImage.name) // 파일을 reviewImages 폴더에 이동시킨다.
 
   // 업로드 되었다는 응답값을 반환
   res.send(newReviewImage.name)
+})
+
+// 프로필 이미지 업로드 (단일 파일 업로드)
+app.post('/profileImageUpload', (req, res)=>{
+  let newProfileImage = req.files.profileImage // 요청한 객체를 변수에 담는다.
+  newProfileImage.mv('./profileImages/' + newProfileImage.name) // 파일을 reviewImages 폴더에 이동시킨다.
+
+  // 업로드 되었다는 응답값을 반환
+  res.send(newProfileImage.name)
 })
 
 // Creat (POST)
