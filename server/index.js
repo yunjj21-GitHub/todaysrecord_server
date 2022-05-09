@@ -26,7 +26,7 @@ app.use(fileUpload({ // 파일 업로드 허용
 app.use(express.static('reviewImages'))
 
 // 몽고 DB 연결
-mongoose.connect('mongodb://**id**:**pwd**@localhost:27017/todaysrecord', function (err) {
+mongoose.connect('mongodb://localhost:27017/todaysrecord', function (err) {
   if (err) {
     console.error('mongodb connection error', err)
   }
@@ -35,11 +35,11 @@ mongoose.connect('mongodb://**id**:**pwd**@localhost:27017/todaysrecord', functi
 
 // 이미지 리뷰 업로드 (단일 파일 업로드)
 app.post('/reviewImageUpload', (req, res)=>{
-  let reviewImage = req.files.file // 요청한 객체를 변수에 담는다.
-  reviewImage.mv('./reviewImages/' + reviewImage.name) // 파일을 reviewImages 폴더에 이동시킨다.
+  let newReviewImage = req.files.reviewImage // 요청한 객체를 변수에 담는다.
+  newReviewImage.mv('./reviewImages/' + newReviewImage.name) // 파일을 reviewImages 폴더에 이동시킨다.
 
   // 업로드 되었다는 응답값을 반환
-  res.send(reviewImage.name)
+  res.send(newReviewImage.name)
 })
 
 // Creat (POST)
